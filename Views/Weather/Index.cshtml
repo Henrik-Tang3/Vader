@@ -1,0 +1,104 @@
+﻿@model WeatherForecast?
+
+@{
+    var today = DateTime.UtcNow.Date;
+    var tomorrow = today.AddDays(1);
+    var entries = Model?.Properties?.Timeseries ?? new List<TimeseriesEntry>();
+    var todayEntries = entries.Where(e => e.Time.Date == today).ToList();
+    var tomorrowEntries = entries.Where(e => e.Time.Date == tomorrow).ToList();
+}
+
+<h2>Idag</h2>
+<div class="row">
+    @foreach (var entry in todayEntries)
+    {
+        @if (entry.Data?.Next1Hours?.Summary?.SymbolCode != null)
+        {
+            var symbolCode = entry.Data.Next1Hours.Summary.SymbolCode;
+            var mediaUrl = GetWeatherMediaUrl(symbolCode);
+
+            <div class="col-auto text-center border rounded p-2 m-1" style="width: 140px;">
+                <div>@entry.Time.ToString("HH:mm")</div>
+
+                @if (mediaUrl != null && IsVideo(mediaUrl))
+                {
+                    <video src="@mediaUrl" autoplay loop muted playsinline style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"></video>
+                }
+                else if (mediaUrl != null)
+                {
+                    <img src="@mediaUrl" alt="@symbolCode" style="width: 60px; height: 60px; object-fit: cover;" />
+                }
+                else
+                {
+                    <img src="@GetWeatherImageUrl(symbolCode)" alt="@symbolCode" style="width: 60px; height: 60px;" />
+                }
+
+                <div>@entry.Data?.Instant?.Details?.AirTemperature °C</div>
+                <div>@entry.Data?.Instant?.Details?.WindSpeed m/s</div>
+            </div>
+        }
+    }
+</div>
+
+<h2>Imorgon</h2>
+<div class="row">
+    @foreach (var entry in tomorrowEntries)
+    {
+        @if (entry.Data?.Next1Hours?.Summary?.SymbolCode != null)
+        {
+            var symbolCode = entry.Data.Next1Hours.Summary.SymbolCode;
+            var mediaUrl = GetWeatherMediaUrl(symbolCode);
+
+            <div class="col-auto text-center border rounded p-2 m-1" style="width: 140px;">
+                <div>@entry.Time.ToString("HH:mm")</div>
+
+                @if (mediaUrl != null && IsVideo(mediaUrl))
+                {
+                    <video src="@mediaUrl" autoplay loop muted playsinline style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"></video>
+                }
+                else if (mediaUrl != null)
+                {
+                    <img src="@mediaUrl" alt="@symbolCode" style="width: 60px; height: 60px; object-fit: cover;" />
+                }
+                else
+                {
+                    <img src="@GetWeatherImageUrl(symbolCode)" alt="@symbolCode" style="width: 60px; height: 60px;" />
+                }
+
+                <div>@entry.Data?.Instant?.Details?.AirTemperature °C</div>
+                <div>@entry.Data?.Instant?.Details?.WindSpeed m/s</div>
+            </div>
+        }
+    }
+</div>
+
+@functions {
+    string? GetWeatherMediaUrl(string? symbolCode)
+    {
+        var mediaMap = new Dictionary<string, string>
+        {
+            { "rain", "/media/weather/rain.gif" },
+            { "heavyrain", "/media/weather/rain.gif" },
+            { "cloudy", "/media/weather/snow.mp4" },
+            { "rainandthunder", "/media/weather/thunder.gif" }
+        };
+
+        if (symbolCode != null && mediaMap.TryGetValue(symbolCode, out var url))
+        {
+            return url;
+        }
+
+        return null;
+    }
+
+    bool IsVideo(string url) => url.EndsWith(".mp4");
+
+    string GetWeatherImageUrl(string? symbolCode)
+    {
+        if (string.IsNullOrEmpty(symbolCode))
+        {
+            return "https://raw.githubusercontent.com/metno/weathericons/main/weather/svg/cloudy.svg";
+        }
+        return $"https://raw.githubusercontent.com/metno/weathericons/main/weather/svg/{symbolCode}.svg";
+    }
+}
